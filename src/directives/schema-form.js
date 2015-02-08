@@ -74,7 +74,6 @@ angular.module('schemaForm')
               Object.keys(schema.properties).length > 0) {
             lastDigest.schema = schema;
             lastDigest.form = form;
-            console.log(scope.overrides)
             var merged = schemaForm.merge(schema, form, ignore, scope.options, undefined, scope.overrides);
             var frag = document.createDocumentFragment();
 

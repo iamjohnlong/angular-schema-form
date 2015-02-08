@@ -18,6 +18,23 @@
         "type": "string",
         "maxLength": 20,
         "validationMessage": "Don't be greedy!"
+      },
+      "hasFavorites": {
+        "title": "Add Favorite Things",
+        "type": "boolean",
+        "default": false
+      },
+      "favorites": {
+        "type": "object",
+        "title": "Favorite Things",
+        "properties": {
+          "color": {
+            "title": "Favorite Color",
+            "type": "string",
+            "validationMessage": "Whats your favorite color!",
+            "required": true
+          }
+        }
       }
     },
     "required": ["name","email","comment"]
@@ -26,15 +43,27 @@
     "*",
     {
       "type": "submit",
-	  "style": "btn-info",
+	    "style": "btn-info",
       "title": "OK"
     }
   ],
   "overrides": [
     {
-      "key": "['comment']",
+      "key": "comment",
       "type": "textarea",
       "placeholder": "Make a comment"
+    },
+    {
+      "type": "conditional",
+      "condition": "modelData.hasFavorites",
+      "items": [
+        "favorites"
+      ]
+    },
+    {
+      "key": "favorites.color",
+      "placeholder": "Your favorite color"
     }
   ]
+
 }

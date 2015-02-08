@@ -659,6 +659,7 @@ angular.module('schemaForm').provider('schemaForm',
 
   };
 
+
   //First sorted by schema type then a list.
   //Order has importance. First handler returning an form snippet will be used.
   var defaults = {
@@ -731,21 +732,41 @@ angular.module('schemaForm').provider('schemaForm',
 
     var service = {};
 
-    service.merge = function(schema, form, ignore, options, readonly) {
+    var overs = null;
+
+    service.merge = function(schema, form, ignore, options, readonly, overrides) {
       form  = form || ['*'];
       options = options || {};
+      overrides = overrides || [];
 
       // Get readonly from root object
       readonly = readonly || schema.readonly || schema.readOnly;
 
       var stdForm = service.defaults(schema, ignore, options);
 
+      overrides.forEach(function(override) {
+        if(override.items){
+          override.items.forEach(function(item) {
+            var normalized = sfPathProvider.normalize(item)
+            if (override && stdForm.lookup[normalized]) {
+              angular.extend(stdForm.lookup[normalized], override);
+            }
+          });
+          return
+        }
+        var normalized = sfPathProvider.normalize(override.key)
+        if (override && stdForm.lookup[normalized]) {
+          angular.extend(stdForm.lookup[normalized], override);
+        }
+      });
+
       //simple case, we have a "*", just put the stdForm there
       var idx = form.indexOf('*');
       if (idx !== -1) {
-        form  = form.slice(0, idx)
-                    .concat(stdForm.form)
-                    .concat(form.slice(idx + 1));
+        // Replace "*" with the stdFrom.form
+        form = form.slice(0, idx)
+          .concat(stdForm.form)
+          .concat(form.slice(idx + 1));
       }
 
       //ok let's merge!
@@ -1254,6 +1275,7 @@ angular.module('schemaForm')
       scope: {
         schema: '=sfSchema',
         initialForm: '=sfForm',
+        overrides: '=sfOverrides',
         model: '=sfModel',
         options: '=sfOptions'
       },
@@ -1307,8 +1329,7 @@ angular.module('schemaForm')
               Object.keys(schema.properties).length > 0) {
             lastDigest.schema = schema;
             lastDigest.form = form;
-
-            var merged = schemaForm.merge(schema, form, ignore, scope.options);
+            var merged = schemaForm.merge(schema, form, ignore, scope.options, undefined, scope.overrides);
             var frag = document.createDocumentFragment();
 
             // Create a new form and destroy the old one.

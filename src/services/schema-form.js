@@ -218,6 +218,7 @@ angular.module('schemaForm').provider('schemaForm',
 
   };
 
+
   //First sorted by schema type then a list.
   //Order has importance. First handler returning an form snippet will be used.
   var defaults = {
@@ -290,6 +291,8 @@ angular.module('schemaForm').provider('schemaForm',
 
     var service = {};
 
+    var overs = null;
+
     service.merge = function(schema, form, ignore, options, readonly, overrides) {
       form  = form || ['*'];
       options = options || {};
@@ -300,22 +303,29 @@ angular.module('schemaForm').provider('schemaForm',
 
       var stdForm = service.defaults(schema, ignore, options);
 
-      // Do overrides
-      console.log(stdForm, overrides)
-      overrides.forEach(function(f) {
-        // FIXME: normalize keys of the overrides
-        console.log(f)
-        if (f && stdForm.lookup[f.key]) {
-          angular.extend(stdForm.lookup[f.key], f);
+      overrides.forEach(function(override) {
+        if(override.items){
+          override.items.forEach(function(item) {
+            var normalized = sfPathProvider.normalize(item)
+            if (override && stdForm.lookup[normalized]) {
+              angular.extend(stdForm.lookup[normalized], override);
+            }
+          });
+          return
+        }
+        var normalized = sfPathProvider.normalize(override.key)
+        if (override && stdForm.lookup[normalized]) {
+          angular.extend(stdForm.lookup[normalized], override);
         }
       });
 
       //simple case, we have a "*", just put the stdForm there
       var idx = form.indexOf('*');
       if (idx !== -1) {
-        form  = form.slice(0, idx)
-                    .concat(stdForm.form)
-                    .concat(form.slice(idx + 1));
+        // Replace "*" with the stdFrom.form
+        form = form.slice(0, idx)
+          .concat(stdForm.form)
+          .concat(form.slice(idx + 1));
       }
 
       //ok let's merge!
